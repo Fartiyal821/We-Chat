@@ -1,0 +1,18 @@
+import os
+import json
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# अगर Render पर हैं तो एनवायरमेंट वेरिएबल से चलाएं, नहीं तो लोकल फाइल से
+firebase_config = os.environ.get("FIREBASE_CREDENTIALS")
+
+if firebase_config:
+    # Render के लिए
+    cred_dict = json.loads(firebase_config)
+    cred = credentials.Certificate(cred_dict)
+else:
+    # आपके कंप्यूटर पर लोकल टेस्टिंग के लिए
+    cred = credentials.Certificate("serviceAccountKey.json")
+
+firebase_admin.initialize_app(cred)
+db = firestore.client()
