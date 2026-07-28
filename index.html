@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wechat | Real-Time Chat</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #172337;
+      --panel-strong: #1f2a45;
+      --surface: #202b42;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #2dd4bf;
+      --accent-soft: rgba(45, 212, 191, 0.14);
+      --danger: #f87171;
+      --radius: 20px;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.18);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(45, 212, 191, 0.18), transparent 28%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      color: var(--text);
+    }
+
+    .app-shell {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .chat-card {
+      width: min(1100px, 100%);
+      height: min(840px, 100vh);
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      backdrop-filter: blur(18px);
+    }
+
+    .chat-header {
+      padding: 28px 32px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #2dd4bf, #06b6d4);
+      display: grid;
+      place-items: center;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-text p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .chat-tips {
+      display: grid;
+      gap: 10px;
+      justify-items: end;
+    }
+
+    .chat-tips span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .chat-window {
+      padding: 24px 28px 0;
+      overflow-y: auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .message-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .message-row.mine {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: min(72%, 780px);
+      padding: 16px 18px;
+      border-radius: 24px;
+      position: relative;
+      line-height: 1.6;
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .bubble.mine {
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.16), rgba(45, 212, 191, 0.08));
+      border-color: rgba(45, 212, 191, 0.24);
+    }
+
+    .bubble-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .bubble-text {
+      font-size: 1rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .chat-input-panel {
+      margin-top: 18px;
+      padding: 24px 28px 26px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.80));
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+    }
+
+    .chat-input {
+      flex: 1;
+      min-height: 56px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.88);
+      color: var(--text);
+      padding: 16px 20px;
+      font-size: 1rem;
+      outline: none;
+      resize: none;
+    }
+
+    .chat-input::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    .send-button {
+      border: none;
+      border-radius: 999px;
+      min-width: 140px;
+      padding: 0 24px;
+      height: 56px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .send-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 14, 31, 0.8);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .auth-panel {
+      width: min(470px, 100%);
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 28px;
+      padding: 34px 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .auth-panel h2 {
+      margin: 0 0 10px;
+      color: #f8fafc;
+      font-size: 1.7rem;
+    }
+
+    .auth-panel p {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .auth-input {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 16px;
+      padding: 16px 18px;
+      background: rgba(15, 23, 42, 0.88);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .auth-actions {
+      display: grid;
+      gap: 14px;
+    }
+
+    .auth-button,
+    .google-button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .auth-button {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .google-button {
+      background: #0f172a;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: #d1d5db;
+    }
+
+    .google-button span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .google-button svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .notes {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .notes code {
+      color: #cbd5e1;
+      background: rgba(148, 163, 184, 0.08);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 720px) {
+      .chat-card {
+        height: 100vh;
+        border-radius: 24px;
+      }
+
+      .chat-header,
+      .chat-window,
+      .chat-input-panel {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .message-row {
+        gap: 8px;
+      }
+
+      .bubble {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <main class="chat-card" aria-label="Wechat chat application">
+      <section class="chat-header">
+        <div class="brand">
+          <div class="brand-icon">W</div>
+          <div class="brand-text">
+            <h1>Wechat</h1>
+            <p>Secure real-time messaging powered by FastAPI WebSockets.</p>
+          </div>
+        </div>
+        <div class="chat-tips">
+          <span id="statusText">Connecting...</span>
+          <span>Local server only</span>
+        </div>
+      </section>
+
+      <section id="chatWindow" class="chat-window" aria-live="polite"></section>
+
+      <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
+        <textarea id="messageInput" class="chat-input" rows="1" placeholder="Type a message..." required></textarea>
+        <button type="submit" class="send-button">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <div id="authOverlay" class="auth-overlay" aria-modal="true" role="dialog">
+    <div class="auth-panel">
+      <h2>Welcome to Wechat</h2>
+      <p>Enter a display name to join the conversation instantly.</p>
+      <input id="displayName" class="auth-input" type="text" placeholder="Your display name" maxlength="24" />
+      <div class="auth-actions">
+        <button id="loginButton" class="auth-button">Continue as guest</button>
+      </div>
+      <p class="notes">No external auth required. Guest name will be saved locally.</p>
+    </div>
+  </div>
+
+  <script>
+    /*
+      Firebase Google Login Integration Example:
+      1) Create a Firebase project at https://console.firebase.google.com
+      2) Enable Google sign-in under Authentication > Sign-in method.
+      3) Add Firebase SDK script tags above this script block.
+      4) Initialize Firebase with your app config before the chat logic runs.
+
+      Example config:
+        const firebaseConfig = {
+          apiKey: "YOUR_API_KEY",
+          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+          projectId: "YOUR_PROJECT_ID",
+          appId: "YOUR_APP_ID",
+        };
+        firebase.initializeApp(firebaseConfig);
+    */
+
+    const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${wsScheme}://${window.location.host}/ws`;
+    const authOverlay = document.getElementById('authOverlay');
+    const statusText = document.getElementById('statusText');
+    const chatWindow = document.getElementById('chatWindow');
+    const inputForm = document.getElementById('inputForm');
+    const messageInput = document.getElementById('messageInput');
+    const displayNameInput = document.getElementById('displayName');
+    const loginButton = document.getElementById('loginButton');
+
+    let websocket;
+    let currentUser = '';
+
+    const savedName = localStorage.getItem('wechatDisplayName');
+    if (savedName) {
+      currentUser = savedName;
+      hideAuth();
+      connectSocket();
+    }
+
+    function showAuth() {
+      authOverlay.style.display = 'grid';
+      document.body.style.overflow = 'hidden';
+      displayNameInput.focus();
+    }
+
+    function hideAuth() {
+      authOverlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function formatTime(iso) {
+      const date = new Date(iso);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function appendMessage({ username, content, timestamp }, isMine) {
+      const row = document.createElement('div');
+      row.className = `message-row ${isMine ? 'mine' : ''}`;
+
+      const bubble = document.createElement('article');
+      bubble.className = `bubble ${isMine ? 'mine' : ''}`;
+      bubble.innerHTML = `
+        <div class="bubble-title">
+          <span>${username}</span>
+          <span>${formatTime(timestamp)}</span>
+        </div>
+        <div class="bubble-text"></div>
+      `;
+      bubble.querySelector('.bubble-text').textContent = content;
+      row.appendChild(bubble);
+      chatWindow.appendChild(row);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    async function connectSocket() {
+      websocket = new WebSocket(wsUrl);
+      setStatus('Connecting to server...');
+
+      websocket.addEventListener('open', () => {
+        setStatus('Connected');
+      });
+
+      websocket.addEventListener('message', (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'history' && Array.isArray(payload.messages)) {
+            payload.messages.forEach((msg) => appendMessage(msg, msg.username === currentUser));
+            return;
+          }
+          if (payload.type === 'message') {
+            appendMessage(payload, payload.username === currentUser);
+          }
+        } catch (error) {
+          console.warn('Malformed message from server', error);
+        }
+      });
+
+      websocket.addEventListener('close', () => {
+        setStatus('Disconnected. Reconnecting in 3s...');
+        setTimeout(connectSocket, 3000);
+      });
+
+      websocket.addEventListener('error', () => {
+        setStatus('Connection error. Check server.');
+      });
+    }
+
+    function sendMessage(content) {
+      if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      const payload = {
+        type: 'message',
+        username: currentUser,
+        content,
+      };
+      websocket.send(JSON.stringify(payload));
+    }
+
+    inputForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const content = messageInput.value.trim();
+      if (!content) {
+        return;
+      }
+      sendMessage(content);
+      messageInput.value = '';
+    });
+
+    loginButton.addEventListener('click', () => {
+      const value = displayNameInput.value.trim();
+      if (!value) {
+        displayNameInput.focus();
+        return;
+      }
+      currentUser = value;
+      localStorage.setItem('wechatDisplayName', currentUser);
+      hideAuth();
+      connectSocket();
+    });
+
+    
+
+    if (!savedName) {
+      showAuth();
+    }
+  </script>
+</body>
+</html>
