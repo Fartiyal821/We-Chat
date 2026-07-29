@@ -315,6 +315,16 @@
       border-radius: 6px;
     }
 
+
+    .delete-button { border: 0; background: rgba(239,68,68,.12); color: #fecaca; border-radius: 10px; padding: 6px 9px; cursor: pointer; font-size: .78rem; }
+    .delete-button:hover { background: rgba(239,68,68,.22); }
+    .message-row.deleted .bubble-text { color: var(--text-muted); font-style: italic; }
+    .ban-overlay { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 20px; background: rgba(5,14,31,.88); }
+    .ban-panel { width:min(420px,100%); padding:30px; border-radius:24px; background:var(--bg); border:1px solid rgba(239,68,68,.3); text-align:center; box-shadow:var(--shadow-lg); }
+    .ban-panel h2 { margin:0 0 10px; color:#fecaca; }
+    .ban-panel p { color:var(--text-secondary); line-height:1.6; }
+    @media (max-width: 520px) { .app-shell{padding:0}.chat-card{width:100vw;height:100dvh;border-radius:0}.chat-header{padding:16px 16px 0}.brand-text p,.chat-tips span:last-child{display:none}.chat-window{padding:16px 12px 0}.chat-input-panel{padding:12px;gap:8px}.send-button{min-width:72px;padding:0 16px}.bubble{max-width:92%;padding:12px 14px}.brand-icon{width:40px;height:40px}.brand-text h1{font-size:1.2rem} }
+
     @media (max-width: 720px) {
       .chat-card {
         height: 100vh;
@@ -376,6 +386,8 @@
     </div>
   </div>
 
+  <div id="banOverlay" class="ban-overlay" role="alertdialog" aria-modal="true"><div class="ban-panel"><h2>Chat access temporarily restricted</h2><p>You are banned from sending messages for 24 hours because abusive language was used again. You can still read the chat.</p><p id="banCountdown"></p></div></div>
+
   <script>
     /*
       Firebase Google Login Integration Example:
@@ -406,6 +418,10 @@
 
     let websocket;
     let currentUser = '';
+    const ABUSIVE_WORDS = ['fuck','fucking','shit','bitch','asshole','bastard','motherfucker','chutiya','chut','madarchod','bhenchod','bc','mc','gandu','harami'];
+    const BAN_KEY = 'wechatBanUntil';
+    const WARNING_KEY = 'wechatAbuseWarning';
+    let banTimer;
 
     const savedName = localStorage.getItem('wechatDisplayName');
     if (savedName) {
@@ -430,24 +446,32 @@
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function appendMessage({ username, content, timestamp }, isMine) {
+    function appendMessage({ username, content, timestamp, id }, isMine) {
       const row = document.createElement('div');
       row.className = `message-row ${isMine ? 'mine' : ''}`;
-
+      row.dataset.messageId = id || `${username}-${timestamp}-${content}`;
       const bubble = document.createElement('article');
       bubble.className = `bubble ${isMine ? 'mine' : ''}`;
-      bubble.innerHTML = `
-        <div class="bubble-title">
-          <span>${username}</span>
-          <span>${formatTime(timestamp)}</span>
-        </div>
-        <div class="bubble-text"></div>
-      `;
+      bubble.innerHTML = `<div class="bubble-title"><span></span><span></span></div><div class="bubble-text"></div>`;
+      bubble.querySelector('.bubble-title span:first-child').textContent = username;
+      bubble.querySelector('.bubble-title span:last-child').textContent = formatTime(timestamp);
       bubble.querySelector('.bubble-text').textContent = content;
-      row.appendChild(bubble);
-      chatWindow.appendChild(row);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      if (isMine) { const del=document.createElement('button'); del.className='delete-button'; del.type='button'; del.textContent='Delete'; del.addEventListener('click',()=>deleteOwnMessage(row, bubble, content)); bubble.querySelector('.bubble-title').appendChild(del); }
+      row.appendChild(bubble); chatWindow.appendChild(row); chatWindow.scrollTop = chatWindow.scrollHeight;
     }
+
+    function deleteOwnMessage(row, bubble, originalContent) {
+      if (!confirm('Delete this message?')) return;
+      row.classList.add('deleted');
+      bubble.querySelector('.bubble-text').textContent = 'This message was deleted.';
+      const button=bubble.querySelector('.delete-button'); if(button) button.remove();
+      // Frontend-only deletion: removes it from this device. Server-side deletion needs backend support.
+    }
+
+    function containsAbuse(text) { const normalized=text.toLowerCase().replace(/[^a-z0-9]/g,''); return ABUSIVE_WORDS.some(word => normalized.includes(word.replace(/[^a-z0-9]/g,''))); }
+    function getBanUntil(){ return Number(localStorage.getItem(BAN_KEY)||0); }
+    function isBanned(){ return Date.now() < getBanUntil(); }
+    function updateBanUI(){ const banned=isBanned(); messageInput.disabled=banned; inputForm.querySelector('button').disabled=banned; if(banned){ document.getElementById('banOverlay').style.display='grid'; const tick=()=>{const left=Math.max(0,getBanUntil()-Date.now()); document.getElementById('banCountdown').textContent=`Time remaining: ${Math.ceil(left/3600000)} hour(s)`; if(!left){clearInterval(banTimer);document.getElementById('banOverlay').style.display='none';updateBanUI();}}; tick(); clearInterval(banTimer);banTimer=setInterval(tick,60000);} }
 
     function setStatus(text) {
       statusText.textContent = text;
@@ -504,6 +528,19 @@
       if (!content) {
         return;
       }
+      if (isBanned()) { updateBanUI(); return; }
+      if (containsAbuse(content)) {
+        if (localStorage.getItem(WARNING_KEY) === '1') {
+          localStorage.setItem(BAN_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
+          localStorage.removeItem(WARNING_KEY);
+          alert('You are banned for 24 hours. You can still view the chat but cannot write messages.');
+          updateBanUI();
+        } else {
+          localStorage.setItem(WARNING_KEY, '1');
+          alert("Don't use these words. If abusive language is used again, you will be banned for 24 hours.");
+        }
+        return;
+      }
       sendMessage(content);
       messageInput.value = '';
     });
@@ -522,6 +559,7 @@
 
     
 
+    updateBanUI();
     if (!savedName) {
       showAuth();
     }
