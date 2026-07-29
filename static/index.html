@@ -325,6 +325,9 @@
     .ban-panel p { color:var(--text-secondary); line-height:1.6; }
     @media (max-width: 520px) { .app-shell{padding:0}.chat-card{width:100vw;height:100dvh;border-radius:0}.chat-header{padding:16px 16px 0}.brand-text p,.chat-tips span:last-child{display:none}.chat-window{padding:16px 12px 0}.chat-input-panel{padding:12px;gap:8px}.send-button{min-width:72px;padding:0 16px}.bubble{max-width:92%;padding:12px 14px}.brand-icon{width:40px;height:40px}.brand-text h1{font-size:1.2rem} }
 
+
+    .voice-button{width:56px;height:56px;border:1px solid rgba(148,163,184,.2);border-radius:50%;background:rgba(15,23,42,.88);color:var(--text-primary);font-size:1.15rem;cursor:pointer;flex:0 0 auto}.voice-button.recording{background:var(--danger);color:white;animation:pulse 1s infinite}.voice-button:disabled{opacity:.5;cursor:not-allowed}.voice-status{position:absolute;bottom:88px;left:28px;color:var(--text-muted);font-size:.82rem}@keyframes pulse{50%{transform:scale(1.06)}}.voice-message{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;min-width:230px}.voice-message audio{width:100%;max-width:330px;height:38px}.voice-expiry{font-size:.76rem;color:var(--text-muted);margin-top:6px}
+
     @media (max-width: 720px) {
       .chat-card {
         height: 100vh;
@@ -369,7 +372,9 @@
 
       <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
         <textarea id="messageInput" class="chat-input" rows="1" placeholder="Type a message..." required></textarea>
+        <button id="voiceButton" type="button" class="voice-button" title="Hold to record voice message" aria-label="Record voice message">🎙</button>
         <button type="submit" class="send-button">Send</button>
+        <span id="voiceStatus" class="voice-status"></span>
       </form>
     </main>
   </div>
@@ -415,6 +420,13 @@
     const messageInput = document.getElementById('messageInput');
     const displayNameInput = document.getElementById('displayName');
     const loginButton = document.getElementById('loginButton');
+    const voiceButton = document.getElementById('voiceButton');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const VOICE_LIMIT_MS = 2 * 60 * 1000;
+    const VOICE_EXPIRY_MS = 90 * 60 * 1000;
+    const VOICE_DAILY_LIMIT = 5;
+    const VOICE_USAGE_KEY = 'wechatVoiceUsage';
+    let mediaRecorder, voiceChunks = [], voiceTimer, recordingStartedAt = 0;
 
     let websocket;
     let currentUser = '';
@@ -455,7 +467,20 @@
       bubble.innerHTML = `<div class="bubble-title"><span></span><span></span></div><div class="bubble-text"></div>`;
       bubble.querySelector('.bubble-title span:first-child').textContent = username;
       bubble.querySelector('.bubble-title span:last-child').textContent = formatTime(timestamp);
-      bubble.querySelector('.bubble-text').textContent = content;
+      let voiceData = null;
+      try { const parsed = JSON.parse(content); if (parsed && parsed.kind === 'voice') voiceData = parsed; } catch (_) {}
+      if (voiceData) {
+        const expiresAt = Number(voiceData.expiresAt || 0);
+        if (expiresAt <= Date.now()) { bubble.querySelector('.bubble-text').textContent = 'This voice message has expired.'; }
+        else {
+          const wrap=document.createElement('div'); wrap.className='voice-message';
+          const icon=document.createElement('span'); icon.textContent='🎧';
+          const audio=document.createElement('audio'); audio.controls=true; audio.preload='metadata'; audio.src=voiceData.data;
+          wrap.append(icon,audio); bubble.querySelector('.bubble-text').appendChild(wrap);
+          const expiry=document.createElement('div'); expiry.className='voice-expiry'; expiry.textContent='Voice message • expires in 1.5 hours'; bubble.querySelector('.bubble-text').appendChild(expiry);
+          setTimeout(()=>{audio.pause(); audio.removeAttribute('src'); audio.load(); bubble.querySelector('.bubble-text').textContent='This voice message has expired.';}, Math.max(0,expiresAt-Date.now()));
+        }
+      } else bubble.querySelector('.bubble-text').textContent = content;
       if (isMine) { const del=document.createElement('button'); del.className='delete-button'; del.type='button'; del.textContent='Delete'; del.addEventListener('click',()=>deleteOwnMessage(row, bubble, content)); bubble.querySelector('.bubble-title').appendChild(del); }
       row.appendChild(bubble); chatWindow.appendChild(row); chatWindow.scrollTop = chatWindow.scrollHeight;
     }
@@ -471,7 +496,7 @@
     function containsAbuse(text) { const normalized=text.toLowerCase().replace(/[^a-z0-9]/g,''); return ABUSIVE_WORDS.some(word => normalized.includes(word.replace(/[^a-z0-9]/g,''))); }
     function getBanUntil(){ return Number(localStorage.getItem(BAN_KEY)||0); }
     function isBanned(){ return Date.now() < getBanUntil(); }
-    function updateBanUI(){ const banned=isBanned(); messageInput.disabled=banned; inputForm.querySelector('button').disabled=banned; if(banned){ document.getElementById('banOverlay').style.display='grid'; const tick=()=>{const left=Math.max(0,getBanUntil()-Date.now()); document.getElementById('banCountdown').textContent=`Time remaining: ${Math.ceil(left/3600000)} hour(s)`; if(!left){clearInterval(banTimer);document.getElementById('banOverlay').style.display='none';updateBanUI();}}; tick(); clearInterval(banTimer);banTimer=setInterval(tick,60000);} }
+    function updateBanUI(){ const banned=isBanned(); messageInput.disabled=banned; inputForm.querySelector('button[type=submit]').disabled=banned; updateVoiceButton(); if(banned){ document.getElementById('banOverlay').style.display='grid'; const tick=()=>{const left=Math.max(0,getBanUntil()-Date.now()); document.getElementById('banCountdown').textContent=`Time remaining: ${Math.ceil(left/3600000)} hour(s)`; if(!left){clearInterval(banTimer);document.getElementById('banOverlay').style.display='none';updateBanUI();}}; tick(); clearInterval(banTimer);banTimer=setInterval(tick,60000);} }
 
     function setStatus(text) {
       statusText.textContent = text;
@@ -510,6 +535,30 @@
       });
     }
 
+    function getVoiceUsage(){
+      const now=Date.now(); let items=[]; try{items=JSON.parse(localStorage.getItem(VOICE_USAGE_KEY)||'[]')}catch(_){ }
+      items=items.filter(t=>now-t<24*60*60*1000); localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(items)); return items;
+    }
+    function updateVoiceButton(){ voiceButton.disabled=isBanned() || getVoiceUsage().length>=VOICE_DAILY_LIMIT; voiceButton.title=`Voice message (${getVoiceUsage().length}/${VOICE_DAILY_LIMIT} used today)`; }
+    async function startVoiceRecording(){
+      if(isBanned()) return updateBanUI();
+      if(getVoiceUsage().length>=VOICE_DAILY_LIMIT){alert('You can share only 5 voice messages in 24 hours. Please try again later.');updateVoiceButton();return;}
+      if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){alert('Voice recording is not supported in this browser.');return;}
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        const mimeType=['audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t));
+        mediaRecorder=new MediaRecorder(stream,mimeType?{mimeType}:undefined); voiceChunks=[]; recordingStartedAt=Date.now();
+        mediaRecorder.ondataavailable=e=>{if(e.data.size)voiceChunks.push(e.data)};
+        mediaRecorder.onstop=async()=>{clearTimeout(voiceTimer);stream.getTracks().forEach(t=>t.stop());voiceButton.classList.remove('recording');voiceStatus.textContent='';
+          const blob=new Blob(voiceChunks,{type:mediaRecorder.mimeType||'audio/webm'}); if(blob.size<800){return;}
+          const reader=new FileReader(); reader.onload=()=>{const usage=getVoiceUsage();usage.push(Date.now());localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(usage));updateVoiceButton();sendMessage(JSON.stringify({kind:'voice',data:reader.result,expiresAt:Date.now()+VOICE_EXPIRY_MS,duration:Math.min(VOICE_LIMIT_MS,Date.now()-recordingStartedAt)}));}; reader.readAsDataURL(blob);
+        };
+        mediaRecorder.start();voiceButton.classList.add('recording');voiceStatus.textContent='Recording… tap again to send';
+        voiceTimer=setTimeout(()=>{if(mediaRecorder?.state==='recording'){voiceStatus.textContent='2-minute limit reached. Sending…';mediaRecorder.stop();}},VOICE_LIMIT_MS);
+      }catch(e){alert('Microphone permission is required to send a voice message.');}
+    }
+    voiceButton.addEventListener('click',()=>{if(mediaRecorder?.state==='recording')mediaRecorder.stop();else startVoiceRecording();});
+
     function sendMessage(content) {
       if (!websocket || websocket.readyState !== WebSocket.OPEN) {
         return;
@@ -535,6 +584,7 @@
           localStorage.removeItem(WARNING_KEY);
           alert('You are banned for 24 hours. You can still view the chat but cannot write messages.');
           updateBanUI();
+    updateVoiceButton();
         } else {
           localStorage.setItem(WARNING_KEY, '1');
           alert("Don't use these words. If abusive language is used again, you will be banned for 24 hours.");
