@@ -125,6 +125,7 @@
       overflow-y: auto;
       display: grid;
       gap: 14px;
+      align-content: start;
     }
 
     .message-row {
@@ -182,6 +183,30 @@
       bottom: 0;
       z-index: 1;
     }
+    
+    /* ADDED: Recipient Select Styles for Personal Chat */
+    .recipient-select {
+      background: rgba(15, 23, 42, 0.88);
+      color: var(--accent);
+      font-weight: bold;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 999px;
+      padding: 0 16px;
+      height: 56px;
+      outline: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2306b6d4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px top 50%;
+      background-size: 10px auto;
+      padding-right: 32px;
+      max-width: 160px;
+    }
+    .recipient-select:focus { border-color: var(--accent); }
+    .recipient-select option { background: var(--surface); color: var(--text-primary); }
 
     .chat-input {
       flex: 1;
@@ -289,18 +314,6 @@
       color: #d1d5db;
     }
 
-    .google-button span {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .google-button svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-
     .notes {
       margin-top: 14px;
       color: var(--muted);
@@ -323,8 +336,20 @@
     .ban-panel { width:min(420px,100%); padding:30px; border-radius:24px; background:var(--bg); border:1px solid rgba(239,68,68,.3); text-align:center; box-shadow:var(--shadow-lg); }
     .ban-panel h2 { margin:0 0 10px; color:#fecaca; }
     .ban-panel p { color:var(--text-secondary); line-height:1.6; }
-    @media (max-width: 520px) { .app-shell{padding:0}.chat-card{width:100vw;height:100dvh;border-radius:0}.chat-header{padding:16px 16px 0}.brand-text p,.chat-tips span:last-child{display:none}.chat-window{padding:16px 12px 0}.chat-input-panel{padding:12px;gap:8px}.send-button{min-width:72px;padding:0 16px}.bubble{max-width:92%;padding:12px 14px}.brand-icon{width:40px;height:40px}.brand-text h1{font-size:1.2rem} }
-
+    
+    @media (max-width: 520px) { 
+        .app-shell{padding:0}
+        .chat-card{width:100vw;height:100dvh;border-radius:0}
+        .chat-header{padding:16px 16px 0}
+        .brand-text p,.chat-tips span:last-child{display:none}
+        .chat-window{padding:16px 12px 0}
+        .chat-input-panel{padding:12px;gap:8px}
+        .send-button{min-width:72px;padding:0 16px}
+        .bubble{max-width:92%;padding:12px 14px}
+        .brand-icon{width:40px;height:40px}
+        .brand-text h1{font-size:1.2rem}
+        .recipient-select { height: 48px; padding: 0 12px; font-size: 0.85rem; padding-right: 24px; max-width: 110px; }
+    }
 
     .voice-button{width:56px;height:56px;border:1px solid rgba(148,163,184,.2);border-radius:50%;background:rgba(15,23,42,.88);color:var(--text-primary);font-size:1.15rem;cursor:pointer;flex:0 0 auto}.voice-button.recording{background:var(--danger);color:white;animation:pulse 1s infinite}.voice-button:disabled{opacity:.5;cursor:not-allowed}.voice-status{position:absolute;bottom:88px;left:28px;color:var(--text-muted);font-size:.82rem}@keyframes pulse{50%{transform:scale(1.06)}}.voice-message{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;min-width:230px}.voice-message audio{width:100%;max-width:330px;height:38px}.voice-expiry{font-size:.76rem;color:var(--text-muted);margin-top:6px}
 
@@ -333,18 +358,15 @@
         height: 100vh;
         border-radius: 24px;
       }
-
       .chat-header,
       .chat-window,
       .chat-input-panel {
         padding-left: 20px;
         padding-right: 20px;
       }
-
       .message-row {
         gap: 8px;
       }
-
       .bubble {
         max-width: 100%;
       }
@@ -371,6 +393,10 @@
       <section id="chatWindow" class="chat-window" aria-live="polite"></section>
 
       <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
+        <!-- ADDED: Recipient Dropdown -->
+        <select id="recipientSelect" class="recipient-select" title="Switch between Public and Private messages">
+          <option value="">Public Room</option>
+        </select>
         <textarea id="messageInput" class="chat-input" rows="1" placeholder="Type a message..." required></textarea>
         <button id="voiceButton" type="button" class="voice-button" title="Hold to record voice message" aria-label="Record voice message">🎙</button>
         <button type="submit" class="send-button">Send</button>
@@ -394,23 +420,6 @@
   <div id="banOverlay" class="ban-overlay" role="alertdialog" aria-modal="true"><div class="ban-panel"><h2>Chat access temporarily restricted</h2><p>You are banned from sending messages for 24 hours because abusive language was used again. You can still read the chat.</p><p id="banCountdown"></p></div></div>
 
   <script>
-    /*
-      Firebase Google Login Integration Example:
-      1) Create a Firebase project at https://console.firebase.google.com
-      2) Enable Google sign-in under Authentication > Sign-in method.
-      3) Add Firebase SDK script tags above this script block.
-      4) Initialize Firebase with your app config before the chat logic runs.
-
-      Example config:
-        const firebaseConfig = {
-          apiKey: "YOUR_API_KEY",
-          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-          projectId: "YOUR_PROJECT_ID",
-          appId: "YOUR_APP_ID",
-        };
-        firebase.initializeApp(firebaseConfig);
-    */
-
     const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const wsUrl = `${wsScheme}://${window.location.host}/ws`;
     const authOverlay = document.getElementById('authOverlay');
@@ -422,6 +431,8 @@
     const loginButton = document.getElementById('loginButton');
     const voiceButton = document.getElementById('voiceButton');
     const voiceStatus = document.getElementById('voiceStatus');
+    const recipientSelect = document.getElementById('recipientSelect');
+    
     const VOICE_LIMIT_MS = 2 * 60 * 1000;
     const VOICE_EXPIRY_MS = 90 * 60 * 1000;
     const VOICE_DAILY_LIMIT = 5;
@@ -434,6 +445,10 @@
     const BAN_KEY = 'wechatBanUntil';
     const WARNING_KEY = 'wechatAbuseWarning';
     let banTimer;
+    
+    // ADDED: State for Private Messaging
+    let allMessages = [];
+    let knownUsers = new Set();
 
     const savedName = localStorage.getItem('wechatDisplayName');
     if (savedName) {
@@ -458,17 +473,86 @@
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function appendMessage({ username, content, timestamp, id }, isMine) {
+    // ADDED: Track Active Users to Chat With
+    function addKnownUser(username) {
+      if (username && username !== currentUser && !knownUsers.has(username)) {
+        knownUsers.add(username);
+        const opt = document.createElement('option');
+        opt.value = username;
+        opt.textContent = username;
+        recipientSelect.appendChild(opt);
+      }
+    }
+
+    // ADDED: Helper to extract Recipient dynamically without server changes
+    function parseRecipient(content) {
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed && parsed.to) return parsed.to;
+      } catch(e) {}
+      return null;
+    }
+
+    // ADDED: Logic to only show relevant messages when a tab is selected
+    function shouldShowMessage(msg) {
+      const activeTab = recipientSelect.value;
+      const recipient = parseRecipient(msg.content);
+      
+      if (!activeTab) {
+        return !recipient; // Show public msgs in public tab
+      }
+      // Show private msgs if it involves you and the active selected person
+      return (recipient === activeTab && msg.username === currentUser) ||
+             (msg.username === activeTab && recipient === currentUser);
+    }
+
+    // ADDED: Clears and redraws chat window based on chosen conversation
+    function reRenderChat() {
+      chatWindow.innerHTML = '';
+      allMessages.forEach(msg => {
+        if (shouldShowMessage(msg)) {
+          appendMessageDOM(msg, msg.username === currentUser);
+        }
+      });
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Switched to reRenderChat on dropdown change
+    recipientSelect.addEventListener('change', () => {
+      const opt = recipientSelect.options[recipientSelect.selectedIndex];
+      if (opt.value) opt.textContent = opt.value; // Clear the unread marker
+      reRenderChat();
+    });
+
+    // MODIFIED: Separated rendering DOM function to easily rebuild chat lists
+    function appendMessageDOM({ username, content, timestamp, id }, isMine) {
       const row = document.createElement('div');
       row.className = `message-row ${isMine ? 'mine' : ''}`;
       row.dataset.messageId = id || `${username}-${timestamp}-${content}`;
       const bubble = document.createElement('article');
       bubble.className = `bubble ${isMine ? 'mine' : ''}`;
       bubble.innerHTML = `<div class="bubble-title"><span></span><span></span></div><div class="bubble-text"></div>`;
-      bubble.querySelector('.bubble-title span:first-child').textContent = username;
+      
+      const recipient = parseRecipient(content);
+      if (recipient) {
+         // Show private label safely
+         bubble.querySelector('.bubble-title span:first-child').innerHTML = `<strong>${username}</strong> <span style="font-size:0.75rem; color:var(--accent); margin-left:6px;">(Private)</span>`;
+      } else {
+         bubble.querySelector('.bubble-title span:first-child').textContent = username;
+      }
       bubble.querySelector('.bubble-title span:last-child').textContent = formatTime(timestamp);
+      
       let voiceData = null;
-      try { const parsed = JSON.parse(content); if (parsed && parsed.kind === 'voice') voiceData = parsed; } catch (_) {}
+      let displayText = content;
+      
+      try { 
+        const parsed = JSON.parse(content); 
+        if (parsed) {
+            if (parsed.kind === 'voice') voiceData = parsed; 
+            else if (parsed.kind === 'private') displayText = parsed.text;
+        }
+      } catch (_) {}
+      
       if (voiceData) {
         const expiresAt = Number(voiceData.expiresAt || 0);
         if (expiresAt <= Date.now()) { bubble.querySelector('.bubble-text').textContent = 'This voice message has expired.'; }
@@ -480,8 +564,15 @@
           const expiry=document.createElement('div'); expiry.className='voice-expiry'; expiry.textContent='Voice message • expires in 1.5 hours'; bubble.querySelector('.bubble-text').appendChild(expiry);
           setTimeout(()=>{audio.pause(); audio.removeAttribute('src'); audio.load(); bubble.querySelector('.bubble-text').textContent='This voice message has expired.';}, Math.max(0,expiresAt-Date.now()));
         }
-      } else bubble.querySelector('.bubble-text').textContent = content;
-      if (isMine) { const del=document.createElement('button'); del.className='delete-button'; del.type='button'; del.textContent='Delete'; del.addEventListener('click',()=>deleteOwnMessage(row, bubble, content)); bubble.querySelector('.bubble-title').appendChild(del); }
+      } else {
+          bubble.querySelector('.bubble-text').textContent = displayText;
+      }
+      
+      if (isMine) { 
+         const del=document.createElement('button'); del.className='delete-button'; del.type='button'; del.textContent='Delete'; 
+         del.addEventListener('click',()=>deleteOwnMessage(row, bubble, content)); 
+         bubble.querySelector('.bubble-title').appendChild(del); 
+      }
       row.appendChild(bubble); chatWindow.appendChild(row); chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
@@ -490,7 +581,6 @@
       row.classList.add('deleted');
       bubble.querySelector('.bubble-text').textContent = 'This message was deleted.';
       const button=bubble.querySelector('.delete-button'); if(button) button.remove();
-      // Frontend-only deletion: removes it from this device. Server-side deletion needs backend support.
     }
 
     function containsAbuse(text) { const normalized=text.toLowerCase().replace(/[^a-z0-9]/g,''); return ABUSIVE_WORDS.some(word => normalized.includes(word.replace(/[^a-z0-9]/g,''))); }
@@ -513,12 +603,30 @@
       websocket.addEventListener('message', (event) => {
         try {
           const payload = JSON.parse(event.data);
+          
           if (payload.type === 'history' && Array.isArray(payload.messages)) {
-            payload.messages.forEach((msg) => appendMessage(msg, msg.username === currentUser));
-            return;
+             allMessages = payload.messages;
+             allMessages.forEach(msg => addKnownUser(msg.username));
+             reRenderChat();
+             return;
           }
           if (payload.type === 'message') {
-            appendMessage(payload, payload.username === currentUser);
+             allMessages.push(payload);
+             addKnownUser(payload.username);
+             
+             if (shouldShowMessage(payload)) {
+                 appendMessageDOM(payload, payload.username === currentUser);
+             } else {
+                 // Notification indicator for private messages in unselected tabs
+                 const recipient = parseRecipient(payload.content);
+                 const sender = payload.username === currentUser ? recipient : payload.username;
+                 if (recipient && sender) {
+                     const opt = Array.from(recipientSelect.options).find(o => o.value === sender);
+                     if (opt && recipientSelect.value !== sender) {
+                         opt.textContent = `🔴 ${sender} (New)`;
+                     }
+                 }
+             }
           }
         } catch (error) {
           console.warn('Malformed message from server', error);
@@ -539,7 +647,9 @@
       const now=Date.now(); let items=[]; try{items=JSON.parse(localStorage.getItem(VOICE_USAGE_KEY)||'[]')}catch(_){ }
       items=items.filter(t=>now-t<24*60*60*1000); localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(items)); return items;
     }
+    
     function updateVoiceButton(){ voiceButton.disabled=isBanned() || getVoiceUsage().length>=VOICE_DAILY_LIMIT; voiceButton.title=`Voice message (${getVoiceUsage().length}/${VOICE_DAILY_LIMIT} used today)`; }
+    
     async function startVoiceRecording(){
       if(isBanned()) return updateBanUI();
       if(getVoiceUsage().length>=VOICE_DAILY_LIMIT){alert('You can share only 5 voice messages in 24 hours. Please try again later.');updateVoiceButton();return;}
@@ -549,15 +659,35 @@
         const mimeType=['audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t));
         mediaRecorder=new MediaRecorder(stream,mimeType?{mimeType}:undefined); voiceChunks=[]; recordingStartedAt=Date.now();
         mediaRecorder.ondataavailable=e=>{if(e.data.size)voiceChunks.push(e.data)};
-        mediaRecorder.onstop=async()=>{clearTimeout(voiceTimer);stream.getTracks().forEach(t=>t.stop());voiceButton.classList.remove('recording');voiceStatus.textContent='';
+        mediaRecorder.onstop=async()=>{
+          clearTimeout(voiceTimer);stream.getTracks().forEach(t=>t.stop());voiceButton.classList.remove('recording');voiceStatus.textContent='';
           const blob=new Blob(voiceChunks,{type:mediaRecorder.mimeType||'audio/webm'}); if(blob.size<800){return;}
-          const reader=new FileReader(); reader.onload=()=>{const usage=getVoiceUsage();usage.push(Date.now());localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(usage));updateVoiceButton();sendMessage(JSON.stringify({kind:'voice',data:reader.result,expiresAt:Date.now()+VOICE_EXPIRY_MS,duration:Math.min(VOICE_LIMIT_MS,Date.now()-recordingStartedAt)}));}; reader.readAsDataURL(blob);
+          const reader=new FileReader(); reader.onload=()=>{
+            const usage=getVoiceUsage();usage.push(Date.now());localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(usage));updateVoiceButton();
+            // Wrap properly for private sending
+            sendMessage(JSON.stringify({kind:'voice',data:reader.result,expiresAt:Date.now()+VOICE_EXPIRY_MS,duration:Math.min(VOICE_LIMIT_MS,Date.now()-recordingStartedAt)}));
+          }; reader.readAsDataURL(blob);
         };
         mediaRecorder.start();voiceButton.classList.add('recording');voiceStatus.textContent='Recording… tap again to send';
         voiceTimer=setTimeout(()=>{if(mediaRecorder?.state==='recording'){voiceStatus.textContent='2-minute limit reached. Sending…';mediaRecorder.stop();}},VOICE_LIMIT_MS);
       }catch(e){alert('Microphone permission is required to send a voice message.');}
     }
     voiceButton.addEventListener('click',()=>{if(mediaRecorder?.state==='recording')mediaRecorder.stop();else startVoiceRecording();});
+
+    // ADDED: Wrapper to securely route messages without rewriting backend rules
+    function wrapContent(rawContent) {
+      const recipient = recipientSelect.value;
+      if (!recipient) return rawContent; 
+      
+      try {
+          const parsed = JSON.parse(rawContent);
+          if (parsed && typeof parsed === 'object') {
+              parsed.to = recipient; 
+              return JSON.stringify(parsed); 
+          }
+      } catch(e) {}
+      return JSON.stringify({ kind: 'private', to: recipient, text: rawContent });
+    }
 
     function sendMessage(content) {
       if (!websocket || websocket.readyState !== WebSocket.OPEN) {
@@ -566,7 +696,7 @@
       const payload = {
         type: 'message',
         username: currentUser,
-        content,
+        content: wrapContent(content) // wraps payload intelligently 
       };
       websocket.send(JSON.stringify(payload));
     }
@@ -584,7 +714,7 @@
           localStorage.removeItem(WARNING_KEY);
           alert('You are banned for 24 hours. You can still view the chat but cannot write messages.');
           updateBanUI();
-    updateVoiceButton();
+          updateVoiceButton();
         } else {
           localStorage.setItem(WARNING_KEY, '1');
           alert("Don't use these words. If abusive language is used again, you will be banned for 24 hours.");
@@ -606,8 +736,6 @@
       hideAuth();
       connectSocket();
     });
-
-    
 
     updateBanUI();
     if (!savedName) {
