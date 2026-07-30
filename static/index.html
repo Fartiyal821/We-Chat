@@ -184,7 +184,6 @@
       z-index: 1;
     }
     
-    /* ADDED: Recipient Select Styles for Personal Chat */
     .recipient-select {
       background: rgba(15, 23, 42, 0.88);
       color: var(--accent);
@@ -328,7 +327,6 @@
       border-radius: 6px;
     }
 
-
     .delete-button { border: 0; background: rgba(239,68,68,.12); color: #fecaca; border-radius: 10px; padding: 6px 9px; cursor: pointer; font-size: .78rem; }
     .delete-button:hover { background: rgba(239,68,68,.22); }
     .message-row.deleted .bubble-text { color: var(--text-muted); font-style: italic; }
@@ -393,7 +391,6 @@
       <section id="chatWindow" class="chat-window" aria-live="polite"></section>
 
       <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
-        <!-- ADDED: Recipient Dropdown -->
         <select id="recipientSelect" class="recipient-select" title="Switch between Public and Private messages">
           <option value="">Public Room</option>
         </select>
@@ -446,7 +443,6 @@
     const WARNING_KEY = 'wechatAbuseWarning';
     let banTimer;
     
-    // ADDED: State for Private Messaging
     let allMessages = [];
     let knownUsers = new Set();
 
@@ -473,7 +469,6 @@
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // ADDED: Track Active Users to Chat With
     function addKnownUser(username) {
       if (username && username !== currentUser && !knownUsers.has(username)) {
         knownUsers.add(username);
@@ -484,7 +479,6 @@
       }
     }
 
-    // ADDED: Helper to extract Recipient dynamically without server changes
     function parseRecipient(content) {
       try {
         const parsed = JSON.parse(content);
@@ -493,20 +487,17 @@
       return null;
     }
 
-    // ADDED: Logic to only show relevant messages when a tab is selected
     function shouldShowMessage(msg) {
       const activeTab = recipientSelect.value;
       const recipient = parseRecipient(msg.content);
       
       if (!activeTab) {
-        return !recipient; // Show public msgs in public tab
+        return !recipient;
       }
-      // Show private msgs if it involves you and the active selected person
       return (recipient === activeTab && msg.username === currentUser) ||
              (msg.username === activeTab && recipient === currentUser);
     }
 
-    // ADDED: Clears and redraws chat window based on chosen conversation
     function reRenderChat() {
       chatWindow.innerHTML = '';
       allMessages.forEach(msg => {
@@ -517,14 +508,12 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    // Switched to reRenderChat on dropdown change
     recipientSelect.addEventListener('change', () => {
       const opt = recipientSelect.options[recipientSelect.selectedIndex];
-      if (opt.value) opt.textContent = opt.value; // Clear the unread marker
+      if (opt.value) opt.textContent = opt.value;
       reRenderChat();
     });
 
-    // MODIFIED: Separated rendering DOM function to easily rebuild chat lists
     function appendMessageDOM({ username, content, timestamp, id }, isMine) {
       const row = document.createElement('div');
       row.className = `message-row ${isMine ? 'mine' : ''}`;
@@ -535,7 +524,6 @@
       
       const recipient = parseRecipient(content);
       if (recipient) {
-         // Show private label safely
          bubble.querySelector('.bubble-title span:first-child').innerHTML = `<strong>${username}</strong> <span style="font-size:0.75rem; color:var(--accent); margin-left:6px;">(Private)</span>`;
       } else {
          bubble.querySelector('.bubble-title span:first-child').textContent = username;
@@ -576,11 +564,17 @@
       row.appendChild(bubble); chatWindow.appendChild(row); chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
+    // UPDATED: Sends global delete instruction to the backend via WebSocket
     function deleteOwnMessage(row, bubble, originalContent) {
-      if (!confirm('Delete this message?')) return;
-      row.classList.add('deleted');
-      bubble.querySelector('.bubble-text').textContent = 'This message was deleted.';
-      const button=bubble.querySelector('.delete-button'); if(button) button.remove();
+      if (!confirm('Delete this message for everyone?')) return;
+      const messageId = row.dataset.messageId;
+      if (messageId && websocket && websocket.readyState === WebSocket.OPEN) {
+          websocket.send(JSON.stringify({
+              type: 'delete',
+              id: parseInt(messageId),
+              username: currentUser
+          }));
+      }
     }
 
     function containsAbuse(text) { const normalized=text.toLowerCase().replace(/[^a-z0-9]/g,''); return ABUSIVE_WORDS.some(word => normalized.includes(word.replace(/[^a-z0-9]/g,''))); }
@@ -617,7 +611,6 @@
              if (shouldShowMessage(payload)) {
                  appendMessageDOM(payload, payload.username === currentUser);
              } else {
-                 // Notification indicator for private messages in unselected tabs
                  const recipient = parseRecipient(payload.content);
                  const sender = payload.username === currentUser ? recipient : payload.username;
                  if (recipient && sender) {
@@ -627,6 +620,22 @@
                      }
                  }
              }
+          }
+          // UPDATED: Handles real-time global message deletion broadcast from backend
+          if (payload.type === 'delete') {
+             const rowToUpdate = document.querySelector(`.message-row[data-message-id="${payload.id}"]`);
+             if (rowToUpdate) {
+                 rowToUpdate.classList.add('deleted');
+                 const bubbleText = rowToUpdate.querySelector('.bubble-text');
+                 if (bubbleText) bubbleText.textContent = 'This message was deleted.';
+                 const delBtn = rowToUpdate.querySelector('.delete-button');
+                 if (delBtn) delBtn.remove();
+             }
+             const msgIndex = allMessages.findIndex(m => m.id === payload.id);
+             if (msgIndex !== -1) {
+                 allMessages.splice(msgIndex, 1);
+             }
+             return;
           }
         } catch (error) {
           console.warn('Malformed message from server', error);
@@ -664,7 +673,6 @@
           const blob=new Blob(voiceChunks,{type:mediaRecorder.mimeType||'audio/webm'}); if(blob.size<800){return;}
           const reader=new FileReader(); reader.onload=()=>{
             const usage=getVoiceUsage();usage.push(Date.now());localStorage.setItem(VOICE_USAGE_KEY,JSON.stringify(usage));updateVoiceButton();
-            // Wrap properly for private sending
             sendMessage(JSON.stringify({kind:'voice',data:reader.result,expiresAt:Date.now()+VOICE_EXPIRY_MS,duration:Math.min(VOICE_LIMIT_MS,Date.now()-recordingStartedAt)}));
           }; reader.readAsDataURL(blob);
         };
@@ -674,7 +682,6 @@
     }
     voiceButton.addEventListener('click',()=>{if(mediaRecorder?.state==='recording')mediaRecorder.stop();else startVoiceRecording();});
 
-    // ADDED: Wrapper to securely route messages without rewriting backend rules
     function wrapContent(rawContent) {
       const recipient = recipientSelect.value;
       if (!recipient) return rawContent; 
@@ -696,7 +703,7 @@
       const payload = {
         type: 'message',
         username: currentUser,
-        content: wrapContent(content) // wraps payload intelligently 
+        content: wrapContent(content) 
       };
       websocket.send(JSON.stringify(payload));
     }
