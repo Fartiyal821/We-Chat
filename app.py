@@ -81,7 +81,7 @@ def load_message_history(session):
             "type": "history",
             "messages": [
                 {
-                    "id": msg.id, # Added ID for frontend deletion mapping
+                    "id": msg.id, 
                     "username": msg.username,
                     "content": msg.content,
                     "timestamp": msg.timestamp.isoformat(),
@@ -118,23 +118,45 @@ async def websocket_endpoint(websocket: WebSocket):
             raw_data = await websocket.receive_text()
             try:
                 payload = json.loads(raw_data)
-                if payload.get("type") != "message":
-                    continue
+                msg_type = payload.get("type")
 
-                username = payload.get("username", "Anonymous").strip() or "Anonymous"
-                content = payload.get("content", "").strip()
-                if not content:
-                    continue
+                # Handle New Messages
+                if msg_type == "message":
+                    username = payload.get("username", "Anonymous").strip() or "Anonymous"
+                    content = payload.get("content", "").strip()
+                    if not content:
+                        continue
 
-                saved_message = save_message(session, username=username, content=content)
-                message_data = {
-                    "type": "message",
-                    "id": saved_message.id, # Added ID for live messages
-                    "username": saved_message.username,
-                    "content": saved_message.content,
-                    "timestamp": saved_message.timestamp.isoformat(),
-                }
-                await manager.broadcast(message_data)
+                    saved_message = save_message(session, username=username, content=content)
+                    message_data = {
+                        "type": "message",
+                        "id": saved_message.id, 
+                        "username": saved_message.username,
+                        "content": saved_message.content,
+                        "timestamp": saved_message.timestamp.isoformat(),
+                    }
+                    await manager.broadcast(message_data)
+
+                # Handle Message Deletions
+                elif msg_type == "delete":
+                    msg_id = payload.get("id")
+                    req_username = payload.get("username")
+                    
+                    if msg_id and req_username:
+                        # Find the message in the database
+                        msg = session.query(ChatMessage).filter(ChatMessage.id == msg_id).first()
+                        
+                        # Only allow deletion if the user requesting it is the one who sent it
+                        if msg and msg.username == req_username:
+                            session.delete(msg)
+                            session.commit()
+                            
+                            # Broadcast the deletion instruction to all users globally
+                            await manager.broadcast({
+                                "type": "delete",
+                                "id": msg_id
+                            })
+
             except json.JSONDecodeError:
                 continue
             except SQLAlchemyError:
