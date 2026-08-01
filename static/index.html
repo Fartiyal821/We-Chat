@@ -12,431 +12,234 @@
       --bg-dark: #090d16;
       --bg: #0f172a;
       --surface: #1e293b;
-      --surface-hover: #334155;
       --text-primary: #f8fafc;
-      --text-secondary: #cbd5e1;
       --text-muted: #94a3b8;
       --accent: #06b6d4;
-      --accent-hover: #0891b2;
-      --accent-light: rgba(6, 182, 212, 0.12);
-      --accent-border: rgba(6, 182, 212, 0.3);
       --danger: #ef4444;
       --success: #10b981;
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 20px;
-      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.4);
-      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
     }
-
-    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
       background: var(--bg-dark);
       color: var(--text-primary);
-      -webkit-font-smoothing: antialiased;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding-bottom: 90px; 
     }
 
-    /* Fullscreen WhatsApp-Style App Shell */
-    .app-shell {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100vw;
-      background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg) 100%);
-    }
+    * { box-sizing: border-box; }
 
-    .chat-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      overflow: hidden;
-    }
-
+    /* Header */
     .chat-header {
+      position: sticky;
+      top: 0;
       padding: 12px 20px;
       background: rgba(15, 23, 42, 0.95);
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      backdrop-filter: blur(12px);
-      z-index: 10;
+      z-index: 50;
+      backdrop-filter: blur(10px);
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, #2dd4bf, #06b6d4);
-      display: grid;
-      place-items: center;
-      color: #0f172a;
-      font-weight: 800;
-      font-size: 1.2rem;
-      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+      border-radius: 10px; color: #0f172a;
+      display: grid; place-items: center; font-weight: bold; font-size: 1.2rem;
+    }
+    .brand-text h1 { margin: 0; font-size: 1.2rem; }
+    .brand-text p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+    
+    .chat-tips { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: flex-end; 
+      gap: 5px; 
+      font-size: 0.8rem; 
+    }
+    
+    .privacy-link {
+      color: var(--accent);
+      text-decoration: underline;
+      font-size: 0.75rem;
+      cursor: pointer;
     }
 
-    .brand-text h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      letter-spacing: -0.02em;
-    }
-
-    .brand-text p {
-      margin: 2px 0 0;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    .chat-tips {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    .chat-tips span {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
+    /* Messages Area */
     .chat-window {
-      flex: 1;
-      padding: 16px 20px;
-      overflow-y: auto;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      background: radial-gradient(circle at 50% 30%, rgba(6, 182, 212, 0.03), transparent 70%);
     }
 
-    .message-row {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      width: 100%;
-    }
-
-    .message-row.mine {
-      justify-content: flex-end;
-    }
+    .message-row { display: flex; width: 100%; }
+    .message-row.mine { justify-content: flex-end; }
 
     .bubble {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      position: relative;
-      line-height: 1.5;
+      max-width: 80%;
+      padding: 12px;
       background: var(--surface);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
     }
-
     .bubble.mine {
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(45, 212, 191, 0.15));
-      border-color: rgba(6, 182, 212, 0.35);
-      border-bottom-right-radius: 4px;
-    }
-
-    .message-row:not(.mine) .bubble {
-      border-bottom-left-radius: 4px;
+      background: rgba(6, 182, 212, 0.15);
+      border-color: rgba(6, 182, 212, 0.4);
     }
 
     .bubble-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 6px;
-      font-size: 0.82rem;
-      color: var(--text-muted);
+      font-size: 0.8rem; color: var(--text-muted);
+      margin-bottom: 5px; display: flex; justify-content: space-between; gap: 15px;
     }
+    .bubble-text { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; line-height: 1.4; }
 
-    .bubble-text {
-      font-size: 0.95rem;
-      color: var(--text-primary);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
+    /* FIXED BOTTOM INPUT */
     .chat-input-panel {
-      padding: 12px 16px;
-      background: rgba(15, 23, 42, 0.98);
-      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 12px 15px;
+      background: var(--bg);
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
       display: flex;
       gap: 10px;
       align-items: center;
+      z-index: 100; 
+      box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
     }
 
     .recipient-select {
-      background: rgba(30, 41, 59, 0.9);
+      background: var(--surface);
       color: var(--accent);
-      font-weight: 600;
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      border: 1px solid rgba(148, 163, 184, 0.4);
       border-radius: 20px;
-      padding: 0 12px;
-      height: 46px;
+      padding: 0 10px;
+      height: 44px;
       outline: none;
-      font-size: 0.85rem;
-      cursor: pointer;
-      max-width: 130px;
+      max-width: 110px;
     }
 
     .chat-input {
       flex: 1;
-      height: 46px;
-      border-radius: 23px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(30, 41, 59, 0.7);
+      height: 44px;
+      border-radius: 22px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: var(--surface);
       color: var(--text-primary);
-      padding: 12px 18px;
-      font-size: 0.95rem;
+      padding: 0 15px;
+      font-size: 1rem;
       outline: none;
-      resize: none;
     }
 
-    .chat-input:focus {
-      border-color: var(--accent);
-    }
-
-    .send-button {
+    .voice-button, .send-button {
+      height: 44px;
       border: none;
-      border-radius: 23px;
-      padding: 0 20px;
-      height: 46px;
-      background: var(--accent);
-      color: #0f172a;
-      font-weight: 700;
+      border-radius: 22px;
+      font-weight: bold;
       cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .send-button:hover {
-      background: var(--accent-hover);
     }
 
     .voice-button {
-      width: 46px;
-      height: 46px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 50%;
-      background: rgba(30, 41, 59, 0.9);
-      color: var(--text-primary);
-      font-size: 1.1rem;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
+      width: 44px;
+      background: var(--surface);
+      color: white;
+      font-size: 1.2rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
     }
+    .voice-button.recording { background: var(--danger); }
 
-    .voice-button.recording {
-      background: var(--danger);
-      animation: pulse 1s infinite;
-    }
-
-    /* Footer / Links Bar */
-    .app-footer {
-      padding: 8px 16px;
-      background: rgba(9, 13, 22, 0.98);
-      border-top: 1px solid rgba(148, 163, 184, 0.08);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .footer-links a {
-      color: var(--accent);
-      text-decoration: none;
-      margin-left: 10px;
-      cursor: pointer;
-    }
-
-    .footer-links a:hover {
-      text-decoration: underline;
-    }
-
-    /* Modals & Overlays */
-    .auth-overlay, .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(5, 14, 31, 0.85);
-      display: none;
-      place-items: center;
-      padding: 20px;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-    }
-
-    .auth-panel, .modal-panel {
-      width: min(500px, 100%);
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 20px;
-      padding: 26px;
-      box-shadow: var(--shadow-lg);
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-
-    .auth-panel h2, .modal-panel h2 {
-      margin: 0 0 10px;
-      color: #f8fafc;
-      font-size: 1.4rem;
-    }
-
-    .auth-input {
-      width: 100%;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: 12px 16px;
-      background: rgba(30, 41, 59, 0.8);
-      color: var(--text-primary);
-      font-size: 0.95rem;
-      outline: none;
-      margin-bottom: 14px;
-    }
-
-    .auth-button {
-      width: 100%;
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
+    .send-button {
+      padding: 0 18px;
       background: var(--accent);
-      color: #0f172a;
-      font-weight: 700;
-      cursor: pointer;
+      color: #000;
     }
 
-    .delete-button { border: 0; background: rgba(239,68,68,.15); color: #fecaca; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.72rem; }
-    .delete-button:hover { background: rgba(239,68,68,.3); }
-
-    .ban-overlay { position: fixed; inset: 0; z-index: 200; display: none; place-items: center; padding: 20px; background: rgba(5,14,31,.92); }
-    .ban-panel { width:min(420px,100%); padding:28px; border-radius:20px; background:var(--bg); border:1px solid rgba(239,68,68,.4); text-align:center; box-shadow:var(--shadow-lg); }
-    .ban-panel h2 { margin:0 0 10px; color:#fecaca; }
-
-    @keyframes pulse { 50% { transform: scale(1.05); } }
-
-    @media (max-width: 600px) {
-      .bubble { max-width: 88%; }
-      .brand-text p { display: none; }
-      .recipient-select { max-width: 100px; padding: 0 6px; }
-      .send-button { padding: 0 14px; }
+    /* Overlays */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none; place-items: center; z-index: 200;
     }
+    .panel {
+      background: var(--bg); padding: 25px; border-radius: 15px;
+      width: 90%; max-width: 400px; border: 1px solid var(--accent);
+      text-align: center;
+    }
+    .panel input {
+      width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px;
+      border: 1px solid gray; background: var(--surface); color: white;
+    }
+    .panel button {
+      width: 100%; padding: 12px; border-radius: 8px; background: var(--accent);
+      border: none; font-weight: bold; cursor: pointer;
+    }
+
+    .delete-button { border: 0; background: rgba(239,68,68,.2); color: #fecaca; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.7rem; }
   </style>
 </head>
 <body>
 
-  <!-- AdSense Top Banner Placement -->
-  <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-8208662455546800"
-       data-ad-slot="4595257649"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
-  <script>
-       (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
+  <!-- Header -->
+  <header class="chat-header">
+    <div class="brand">
+      <div class="brand-icon">W</div>
+      <div class="brand-text">
+        <h1>Wechat</h1>
+        <p>Real-time messaging</p>
+      </div>
+    </div>
+    <div class="chat-tips">
+      <div id="statusText" style="color: var(--success); font-weight:bold;">Connecting...</div>
+      <!-- Privacy Policy Link added here -->
+      <a href="privacy-policy.html" target="_blank" class="privacy-link">Privacy Policy</a>
+    </div>
+  </header>
 
-  <div class="app-shell">
-    <main class="chat-card" aria-label="Wechat chat application">
-      <section class="chat-header">
-        <div class="brand">
-          <div class="brand-icon">W</div>
-          <div class="brand-text">
-            <h1>Wechat</h1>
-            <p>Secure real-time messaging powered by FastAPI WebSockets</p>
-          </div>
-        </div>
-        <div class="chat-tips">
-          <span id="statusText">Connecting...</span>
-          <span style="font-size:0.7rem; color:var(--success);">● Active Community</span>
-        </div>
-      </section>
-
-      <section id="chatWindow" class="chat-window" aria-live="polite"></section>
-
-      <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
-        <select id="recipientSelect" class="recipient-select" title="Switch between Public and Private messages">
-          <option value="">Public Room</option>
-        </select>
-        <textarea id="messageInput" class="chat-input" rows="1" placeholder="Type a message..." required></textarea>
-        <button id="voiceButton" type="button" class="voice-button" title="Hold to record voice message" aria-label="Record voice message">🎙</button>
-        <button type="submit" class="send-button">Send</button>
-      </form>
-
-      <!-- Site Footer for AdSense Compliance -->
-      <footer class="app-footer">
-        <span>© 2026 Wechat Platform. All rights reserved.</span>
-        <div class="footer-links">
-          <a onclick="openModal('termsModal')">Terms & Policy</a>
-          <a onclick="openModal('contactModal')">Contact Us</a>
-        </div>
-      </footer>
-    </main>
+  <!-- Google Ad -->
+  <div style="text-align: center; margin: 10px 0;">
+    <ins class="adsbygoogle"
+         style="display:inline-block;width:100%;height:50px"
+         data-ad-client="ca-pub-8208662455546800"
+         data-ad-slot="4595257649"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
   </div>
 
-  <!-- Login Overlay -->
-  <div id="authOverlay" class="auth-overlay">
-    <div class="auth-panel">
+  <!-- Messages Container -->
+  <main id="chatWindow" class="chat-window"></main>
+
+  <!-- FIXED Input Panel -->
+  <form id="inputForm" class="chat-input-panel" action="javascript:void(0)">
+    <select id="recipientSelect" class="recipient-select">
+      <option value="">Public</option>
+    </select>
+    <input id="messageInput" class="chat-input" type="text" placeholder="Type here..." required autocomplete="off" />
+    <button id="voiceButton" type="button" class="voice-button">🎙</button>
+    <button type="submit" class="send-button">Send</button>
+  </form>
+
+  <!-- Auth Overlay -->
+  <div id="authOverlay" class="overlay">
+    <div class="panel">
       <h2>Welcome to Wechat</h2>
-      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:18px;">Enter a display name to join the global conversation.</p>
-      <input id="displayName" class="auth-input" type="text" placeholder="Your display name" maxlength="24" />
-      <button id="loginButton" class="auth-button">Continue to Chat</button>
+      <input id="displayName" type="text" placeholder="Enter display name" maxlength="20" />
+      <button id="loginButton">Join Chat</button>
     </div>
   </div>
 
   <!-- Ban Overlay -->
-  <div id="banOverlay" class="ban-overlay" role="alertdialog">
-    <div class="ban-panel">
-      <h2>Chat Access Restricted</h2>
-      <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.5;">Your messaging privileges have been suspended for 24 hours due to repeated violation of our Abusive Language & Conduct Policy. You may still view public messages.</p>
-      <p id="banCountdown" style="color:var(--danger); font-weight:bold; margin-top:15px;"></p>
-    </div>
-  </div>
-
-  <!-- Modal: Terms & Policy (AdSense Mandatory) -->
-  <div id="termsModal" class="modal-overlay">
-    <div class="modal-panel">
-      <h2>Terms & Community Policy</h2>
-      <div style="color:var(--text-secondary); font-size:0.88rem; line-height:1.6; margin-bottom:20px;">
-        <p><strong>1. Zero Tolerance for Abusive Content:</strong> Wechat strictly prohibits the use of offensive, vulgar, profane, or abusive language (in English, Hindi, or transliterated scripts). This applies to both text messages and audio recordings.</p>
-        <p><strong>2. Automated Moderation & Bans:</strong> Our system utilizes real-time deep content inspection. Sending offensive content will result in an immediate automated warning. A second offense will lead to an immediate 24-hour temporary account ban.</p>
-        <p><strong>3. User Privacy & Safety:</strong> Public chat rooms are accessible by all online users. Do not share sensitive personal information, financial data, or credentials.</p>
-      </div>
-      <button class="auth-button" onclick="closeModal('termsModal')">Close</button>
-    </div>
-  </div>
-
-  <!-- Modal: Contact Us (AdSense Mandatory) -->
-  <div id="contactModal" class="modal-overlay">
-    <div class="modal-panel">
-      <h2>Contact Us</h2>
-      <div style="color:var(--text-secondary); font-size:0.9rem; line-height:1.8; margin-bottom:20px;">
-        <p>If you have any questions, bug reports, or inquiries regarding our platform, please get in touch with us:</p>
-        <p><strong>📧 Email:</strong> <a href="mailto:gauravfartiyal751@gmail.com" style="color:var(--accent);">gauravfartiyal751@gmail.com</a></p>
-        <p><strong>📸 Instagram:</strong> <a href="https://instagram.com/shortstudy999" target="_blank" style="color:var(--accent);">@shortstudy999</a></p>
-      </div>
-      <button class="auth-button" onclick="closeModal('contactModal')">Close</button>
+  <div id="banOverlay" class="overlay">
+    <div class="panel" style="border-color: var(--danger);">
+      <h2 style="color: var(--danger);">Access Restricted</h2>
+      <p>Banned for 24 hours (Abusive Language).</p>
+      <p id="banCountdown" style="font-weight:bold;"></p>
     </div>
   </div>
 
@@ -453,85 +256,52 @@
     const voiceButton = document.getElementById('voiceButton');
     const recipientSelect = document.getElementById('recipientSelect');
     
-    const VOICE_LIMIT_MS = 2 * 60 * 1000;
-    const VOICE_EXPIRY_MS = 90 * 60 * 1000;
-    const VOICE_DAILY_LIMIT = 5;
-    const VOICE_USAGE_KEY = 'wechatVoiceUsage';
-    let mediaRecorder, voiceChunks = [], voiceTimer, recordingStartedAt = 0;
-
     let websocket;
     let currentUser = '';
+    let mediaRecorder, voiceChunks = [];
+    let allMessages = [];
+    let knownUsers = new Set();
     
-    // Deep Search Abuse List (Hindi, Hinglish, English profanity & variations)
-    const ABUSIVE_WORDS = [
-      'fuck','fucking','fck','fuk','shit','bitch','asshole','bastard','motherfucker','cunt',
-      'chutiya','chootiya','chutiyaa','chut','choo','madarchod','maderchod','mc','bhenchod','benchod','bc',
-      'gandu','gaand','harami','haraami','lund','lauda5','lawda','loda','randi','saale','saala','kamine','kamina',
-      'bhosdike','bhosdi','gaandfat','terimaa'
-    ];
-    
+    const ABUSIVE_WORDS = ['fuck','fucking','shit','bitch','asshole','chutiya','chootiya','chut','madarchod','maderchod','mc','bhenchod','benchod','bc','gandu','gaand','harami','lund','lauda','loda','randi','saale','saala','kamine','bhosdike'];
     const BAN_KEY = 'wechatBanUntil';
     const WARNING_KEY = 'wechatAbuseWarning';
     let banTimer;
-    
-    let allMessages = [];
-    let knownUsers = new Set();
 
     const savedName = localStorage.getItem('wechatDisplayName');
     if (savedName) {
       currentUser = savedName;
-      hideAuth();
+      authOverlay.style.display = 'none';
       connectSocket();
     } else {
-      showAuth();
+      authOverlay.style.display = 'grid';
     }
 
-    function showAuth() { authOverlay.style.display = 'grid'; }
-    function hideAuth() { authOverlay.style.display = 'none'; }
-    
-    function openModal(id) { document.getElementById(id).style.display = 'grid'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function formatTime(iso) {
-      const date = new Date(iso);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
+    function formatTime(iso) { return new Date(iso).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
 
     function addKnownUser(username) {
       if (username && username !== currentUser && !knownUsers.has(username)) {
         knownUsers.add(username);
         const opt = document.createElement('option');
-        opt.value = username;
-        opt.textContent = username;
+        opt.value = username; opt.textContent = username;
         recipientSelect.appendChild(opt);
       }
     }
 
     function parseRecipient(content) {
-      try {
-        const parsed = JSON.parse(content);
-        if (parsed && parsed.to) return parsed.to;
-      } catch(e) {}
-      return null;
+      try { const parsed = JSON.parse(content); if (parsed && parsed.to) return parsed.to; } catch(e) {} return null;
     }
 
     function shouldShowMessage(msg) {
       const activeTab = recipientSelect.value;
       const recipient = parseRecipient(msg.content);
-      
       if (!activeTab) return !recipient;
-      return (recipient === activeTab && msg.username === currentUser) ||
-             (msg.username === activeTab && recipient === currentUser);
+      return (recipient === activeTab && msg.username === currentUser) || (msg.username === activeTab && recipient === currentUser);
     }
 
     function reRenderChat() {
       chatWindow.innerHTML = '';
-      allMessages.forEach(msg => {
-        if (shouldShowMessage(msg)) {
-          appendMessageDOM(msg, msg.username === currentUser);
-        }
-      });
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      allMessages.forEach(msg => { if (shouldShowMessage(msg)) appendMessageDOM(msg, msg.username === currentUser); });
+      window.scrollTo(0, document.body.scrollHeight);
     }
 
     recipientSelect.addEventListener('change', reRenderChat);
@@ -539,74 +309,52 @@
     function appendMessageDOM({ username, content, timestamp, id }, isMine) {
       const row = document.createElement('div');
       row.className = `message-row ${isMine ? 'mine' : ''}`;
-      row.dataset.messageId = id || `${username}-${timestamp}`;
-      const bubble = document.createElement('article');
+      row.dataset.messageId = id;
+      
+      const bubble = document.createElement('div');
       bubble.className = `bubble ${isMine ? 'mine' : ''}`;
-      bubble.innerHTML = `<div class="bubble-title"><span></span><span></span></div><div class="bubble-text"></div>`;
       
+      const title = document.createElement('div'); title.className = 'bubble-title';
       const recipient = parseRecipient(content);
-      if (recipient) {
-         bubble.querySelector('.bubble-title span:first-child').innerHTML = `<strong>${username}</strong> <span style="font-size:0.7rem; color:var(--accent); margin-left:4px;">(Private)</span>`;
-      } else {
-         bubble.querySelector('.bubble-title span:first-child').textContent = username;
-      }
-      bubble.querySelector('.bubble-title span:last-child').textContent = formatTime(timestamp);
-      
-      let voiceData = null;
-      let displayText = content;
-      
+      title.innerHTML = `<span>${recipient ? '<strong>'+username+'</strong> (Private)' : username}</span> <span>${formatTime(timestamp)}</span>`;
+      bubble.appendChild(title);
+
+      const body = document.createElement('div'); body.className = 'bubble-text';
+      let voiceData = null, displayText = content;
       try { 
         const parsed = JSON.parse(content); 
         if (parsed) {
             if (parsed.kind === 'voice') voiceData = parsed; 
             else if (parsed.kind === 'private') displayText = parsed.text;
         }
-      } catch (_) {}
-      
+      } catch (e) {}
+
       if (voiceData) {
-        const expiresAt = Number(voiceData.expiresAt || 0);
-        if (expiresAt <= Date.now()) { bubble.querySelector('.bubble-text').textContent = 'Audio message expired.'; }
+        if (Number(voiceData.expiresAt || 0) <= Date.now()) { body.textContent = 'Audio expired.'; }
         else {
-          const wrap=document.createElement('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-          const audio=document.createElement('audio'); audio.controls=true; audio.style.height='32px'; audio.style.maxWidth='200px'; audio.src=voiceData.data;
-          wrap.appendChild(audio); bubble.querySelector('.bubble-text').appendChild(wrap);
+          const audio = document.createElement('audio'); audio.controls = true; audio.style.height='35px'; audio.style.maxWidth='200px'; audio.src = voiceData.data;
+          body.appendChild(audio);
         }
-      } else {
-        bubble.querySelector('.bubble-text').textContent = displayText;
-      }
+      } else { body.textContent = displayText; }
       
-      if (isMine) { 
-         const del=document.createElement('button'); del.className='delete-button'; del.type='button'; del.textContent='Delete'; 
-         del.addEventListener('click',()=>deleteOwnMessage(row)); 
-         bubble.querySelector('.bubble-title').appendChild(del); 
+      bubble.appendChild(body);
+
+      if (isMine) {
+         const del = document.createElement('button'); del.className='delete-button'; del.textContent='Del';
+         del.onclick = () => {
+             if(confirm('Delete message?') && websocket.readyState === WebSocket.OPEN) {
+                 websocket.send(JSON.stringify({ type: 'delete', id: parseInt(id), username: currentUser }));
+             }
+         };
+         title.appendChild(del);
       }
-      row.appendChild(bubble); chatWindow.appendChild(row); chatWindow.scrollTop = chatWindow.scrollHeight;
+      row.appendChild(bubble); chatWindow.appendChild(row);
+      window.scrollTo(0, document.body.scrollHeight);
     }
 
-    function deleteOwnMessage(row) {
-      if (!confirm('Delete this message for everyone?')) return;
-      const messageId = row.dataset.messageId;
-      if (messageId && websocket && websocket.readyState === WebSocket.OPEN) {
-          websocket.send(JSON.stringify({
-              type: 'delete',
-              id: parseInt(messageId),
-              username: currentUser
-          }));
-      }
-    }
-
-    // Enhanced Deep Search Algorithm for Moderation
     function containsAbuse(text) { 
-      if (!text) return false;
-      // Normalizing text: replacing numbers used as letters, stripping special characters
-      const normalized = text.toLowerCase()
-        .replace(/0/g, 'o')
-        .replace(/1/g, 'i')
-        .replace(/3/g, 'e')
-        .replace(/@/g, 'a')
-        .replace(/[^a-z]/g, '');
-
-      return ABUSIVE_WORDS.some(word => normalized.includes(word)); 
+      const n = text.toLowerCase().replace(/[013@]/g, m => ({'0':'o','1':'i','3':'e','@':'a'}[m])).replace(/[^a-z]/g, '');
+      return ABUSIVE_WORDS.some(w => n.includes(w)); 
     }
 
     function getBanUntil(){ return Number(localStorage.getItem(BAN_KEY)||0); }
@@ -614,111 +362,97 @@
 
     function updateBanUI(){ 
       const banned = isBanned(); 
-      messageInput.disabled = banned; 
-      inputForm.querySelector('button[type=submit]').disabled = banned; 
-      voiceButton.disabled = banned; 
-      
+      messageInput.disabled = banned; voiceButton.disabled = banned; 
+      inputForm.querySelector('button').disabled = banned;
       if(banned){ 
         document.getElementById('banOverlay').style.display = 'grid'; 
         const tick = () => {
           const left = Math.max(0, getBanUntil() - Date.now()); 
-          document.getElementById('banCountdown').textContent = `Ban expires in: ${Math.ceil(left/3600000)} hour(s)`; 
+          document.getElementById('banCountdown').textContent = `Ban: ${Math.ceil(left/3600000)}h left`; 
           if(!left){ clearInterval(banTimer); document.getElementById('banOverlay').style.display='none'; updateBanUI(); }
         }; 
-        tick(); 
-        clearInterval(banTimer);
-        banTimer = setInterval(tick, 30000);
+        tick(); clearInterval(banTimer); banTimer = setInterval(tick, 30000);
       } 
     }
 
-    function setStatus(text) { statusText.textContent = text; }
-
     async function connectSocket() {
       websocket = new WebSocket(wsUrl);
-      setStatus('Connecting...');
+      statusText.textContent = 'Connected';
+      statusText.style.color = 'var(--success)';
 
-      websocket.addEventListener('open', () => setStatus('Connected'));
-
-      websocket.addEventListener('message', (event) => {
+      websocket.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data);
-          
-          if (payload.type === 'history' && Array.isArray(payload.messages)) {
-             allMessages = payload.messages;
-             allMessages.forEach(msg => addKnownUser(msg.username));
+          const p = JSON.parse(event.data);
+          if (p.type === 'history') {
+             allMessages = p.messages;
+             allMessages.forEach(m => addKnownUser(m.username));
              reRenderChat();
-             return;
+          } else if (p.type === 'message') {
+             allMessages.push(p); addKnownUser(p.username);
+             if (shouldShowMessage(p)) appendMessageDOM(p, p.username === currentUser);
+          } else if (p.type === 'delete') {
+             document.querySelector(`.message-row[data-message-id="${p.id}"]`)?.remove();
+             allMessages = allMessages.filter(m => m.id !== p.id);
           }
-          if (payload.type === 'message') {
-             allMessages.push(payload);
-             addKnownUser(payload.username);
-             if (shouldShowMessage(payload)) appendMessageDOM(payload, payload.username === currentUser);
-          }
-          if (payload.type === 'delete') {
-             const rowToUpdate = document.querySelector(`.message-row[data-message-id="${payload.id}"]`);
-             if (rowToUpdate) rowToUpdate.remove();
-             allMessages = allMessages.filter(m => m.id !== payload.id);
-          }
-        } catch (error) { console.warn(error); }
-      });
-
-      websocket.addEventListener('close', () => {
-        setStatus('Disconnected. Reconnecting...');
+        } catch (e) {}
+      };
+      
+      websocket.onclose = () => {
+        statusText.textContent = 'Disconnected...'; statusText.style.color = 'var(--danger)';
         setTimeout(connectSocket, 3000);
-      });
+      };
     }
 
-    function wrapContent(rawContent) {
-      const recipient = recipientSelect.value;
-      if (!recipient) return rawContent; 
-      return JSON.stringify({ kind: 'private', to: recipient, text: rawContent });
-    }
-
-    function sendMessage(content) {
-      if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
-      websocket.send(JSON.stringify({
-        type: 'message',
-        username: currentUser,
-        content: wrapContent(content) 
-      }));
-    }
-
-    // Submit Handler with Strict Abuse Rules
-    inputForm.addEventListener('submit', (event) => {
-      event.preventDefault();
+    inputForm.onsubmit = (e) => {
+      e.preventDefault();
       const content = messageInput.value.trim();
       if (!content) return;
-      
       if (isBanned()) { updateBanUI(); return; }
       
       if (containsAbuse(content)) {
         if (localStorage.getItem(WARNING_KEY) === '1') {
-          // Second Offense: Immediate 24-Hour Ban
-          localStorage.setItem(BAN_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
-          localStorage.removeItem(WARNING_KEY);
-          alert('Violative content detected again. You have been banned from sending messages for 24 hours.');
-          updateBanUI();
-        } else {
-          // First Offense: Warning
-          localStorage.setItem(WARNING_KEY, '1');
-          alert('WARNING: Abusive/profane language detected! Repeated violations will result in an immediate 24-hour chat ban.');
-        }
+          localStorage.setItem(BAN_KEY, String(Date.now() + 86400000));
+          localStorage.removeItem(WARNING_KEY); alert('Banned for 24 hours.'); updateBanUI();
+        } else { localStorage.setItem(WARNING_KEY, '1'); alert('WARNING: Abusive language!'); }
         return;
       }
       
-      sendMessage(content);
-      messageInput.value = '';
-    });
+      const payload = recipientSelect.value ? JSON.stringify({ kind: 'private', to: recipientSelect.value, text: content }) : content;
+      if (websocket?.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({ type: 'message', username: currentUser, content: payload }));
+        messageInput.value = '';
+      }
+    };
 
-    loginButton.addEventListener('click', () => {
-      const value = displayNameInput.value.trim();
-      if (!value) return;
-      currentUser = value;
+    voiceButton.onpointerdown = async () => {
+      if (isBanned()) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream); voiceChunks = [];
+        mediaRecorder.ondataavailable = e => voiceChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (websocket?.readyState === WebSocket.OPEN) {
+              websocket.send(JSON.stringify({ type: 'message', username: currentUser, content: JSON.stringify({ kind: 'voice', data: reader.result, expiresAt: Date.now() + 5400000 }) }));
+            }
+          };
+          reader.readAsDataURL(new Blob(voiceChunks, { type: 'audio/webm' }));
+        };
+        mediaRecorder.start(); voiceButton.classList.add('recording');
+      } catch (err) { alert('Mic access required.'); }
+    };
+
+    voiceButton.onpointerup = () => {
+      if (mediaRecorder?.state === 'recording') { mediaRecorder.stop(); voiceButton.classList.remove('recording'); }
+    };
+
+    loginButton.onclick = () => {
+      if (!displayNameInput.value.trim()) return;
+      currentUser = displayNameInput.value.trim();
       localStorage.setItem('wechatDisplayName', currentUser);
-      hideAuth();
-      connectSocket();
-    });
-
+      authOverlay.style.display = 'none'; connectSocket();
+    };
     updateBanUI();
   </script>
 </body>
