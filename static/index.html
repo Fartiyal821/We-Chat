@@ -9,12 +9,12 @@
   <title>Wechat | Real-Time Chat</title>
   <style>
     :root {
-      --bg-dark: #090d16;
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --text-primary: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #06b6d4;
+      --bg-dark: #071029;
+      --bg: #071a2b;
+      --surface: #0b2940;
+      --text-primary: #eef2ff;
+      --text-muted: #9fb3c8;
+      --accent: #2563eb;
       --danger: #ef4444;
       --success: #10b981;
     }
@@ -47,8 +47,8 @@
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px;
-      background: linear-gradient(135deg, #2dd4bf, #06b6d4);
-      border-radius: 10px; color: #0f172a;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-radius: 10px; color: #eef2ff;
       display: grid; place-items: center; font-weight: bold; font-size: 1.2rem;
     }
     .brand-text h1 { margin: 0; font-size: 1.2rem; }
@@ -185,35 +185,13 @@
       border: none; font-weight: bold; cursor: pointer;
     }
 
-    /* Floating Privacy Policy Modal Specifics */
-    #privacyModal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: grid; place-items: center; z-index: 300;
-      padding: 15px;
-    }
-    .privacy-content {
-      background: var(--bg);
-      width: 100%; max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 25px;
-      border-radius: 15px;
-      border: 1px solid var(--accent);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    .privacy-content h2 { color: var(--accent); margin-top: 0; font-size: 1.4rem; }
-    .privacy-content h3 { color: #38bdf8; font-size: 1rem; margin-top: 15px; }
-    .privacy-content ul { padding-left: 20px; }
-    .close-privacy {
-      display: block; width: 100%; margin-top: 20px;
-      padding: 12px; background: var(--accent); color: #000;
-      font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
-      text-align: center; font-size: 1rem;
-    }
+    /* Call modal */
+    #callModal { position: fixed; inset: 0; display: none; place-items: center; z-index: 400; background: rgba(0,0,0,0.75); }
+    .call-panel { background: var(--bg); padding: 12px; border-radius: 10px; width: 90%; max-width: 900px; display: grid; gap:12px; grid-template-columns: 1fr 1fr; align-items: start; }
+    .video-box { background: #000; border-radius: 8px; height: 360px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .video-box video { width: 100%; height: 100%; object-fit: cover; }
+    .call-controls { display:flex; gap:8px; align-items:center; }
+    .end-call { background: var(--danger); color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
     .delete-button { border: 0; background: rgba(239,68,68,.2); color: #fecaca; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.7rem; }
   </style>
@@ -221,29 +199,7 @@
 <body>
   <script async="async" data-cfasync="false" src="https://pl30648882.effectivecpmnetwork.com/183cff4d1413c471392b57698a3951b3/invoke.js"></script>
 <div id="container-183cff4d1413c471392b57698a3951b3"></div>
-  <!-- Floating Privacy Policy Modal (AdSense & Google Friendly) -->
-  <div id="privacyModal">
-    <div class="privacy-content">
-      <h2>Privacy Policy & Terms</h2>
-      <p>Last updated: June 2026</p>
-      <p>Welcome to <strong>Wechat</strong>. This platform provides real-time messaging services. Your privacy is important to us.</p>
-      
-      <h3>1. Data Collection</h3>
-      <p>We collect minimal data required for chat functionality, including display names, text messages, and temporary voice clips.</p>
-
-      <h3>2. Cookies & Google AdSense</h3>
-      <p>We use Google AdSense to serve advertisements. Google uses cookies to serve ads based on your visits to this and other websites.</p>
-
-      <h3>3. Contact Information</h3>
-      <p>If you have questions, contact us at:</p>
-      <ul>
-        <li><strong>Email:</strong> <a href="mailto:gauravfartiyal751@gmail.com" style="color: var(--accent);">gauravfartiyal751@gmail.com</a></li>
-        <li><strong>Instagram:</strong> <a href="https://instagram.com/shortstudy999" target="_blank" style="color: var(--accent);">@shortstudy999</a></li>
-      </ul>
-
-      <button class="close-privacy" onclick="closePrivacyModal()">I Agree / Got It (<span id="countdown">10</span>s)</button>
-    </div>
-  </div>
+  <!-- Privacy Policy removed per update; ads and Google tags preserved -->
 
   <!-- Header -->
   <header class="chat-header">
@@ -256,7 +212,6 @@
     </div>
     <div class="chat-tips">
       <div id="statusText" style="color: var(--success); font-weight:bold;">Connecting...</div>
-      <button class="privacy-btn" onclick="openPrivacyModal()">Privacy Policy</button>
     </div>
   </header>
 
@@ -280,6 +235,8 @@
       <option value="">Public</option>
     </select>
     <input id="messageInput" class="chat-input" type="text" placeholder="Type here..." required autocomplete="off" />
+    <button id="videoCallButton" type="button" class="voice-button" title="Start Video Call">📹</button>
+    <button id="audioCallButton" type="button" class="voice-button" title="Start Voice Call">📞</button>
     <button id="voiceButton" type="button" class="voice-button">🎙</button>
     <button type="submit" class="send-button">Send</button>
   </form>
@@ -302,33 +259,28 @@
     </div>
   </div>
 
+  <!-- Call Modal (Video / Voice) -->
+  <div id="callModal">
+    <div class="call-panel">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <strong id="callTitle">Call</strong>
+          <div class="call-controls"><span id="callStatus" style="color:var(--text-muted)">Idle</span></div>
+        </div>
+        <div class="video-box"><video id="remoteVideo" autoplay playsinline></video></div>
+      </div>
+      <div>
+        <div style="margin-bottom:8px;"><small style="color:var(--text-muted)">Your preview</small></div>
+        <div class="video-box"><video id="localVideo" autoplay muted playsinline></video></div>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          <button id="endCallBtn" class="end-call">End Call</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 10 Seconds Countdown Timer for Privacy Modal
-    let timeLeft = 10;
-    const countdownEl = document.getElementById('countdown');
-    const closeBtn = document.querySelector('.close-privacy');
-    closeBtn.disabled = true;
-    closeBtn.style.opacity = '0.5';
-
-    const timerInterval = setInterval(() => {
-      timeLeft--;
-      countdownEl.textContent = timeLeft;
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        closeBtn.disabled = false;
-        closeBtn.style.opacity = '1';
-        closeBtn.textContent = 'Got It / Enter Site';
-      }
-    }, 1000);
-
-    function closePrivacyModal() {
-      if (timeLeft > 0) return;
-      document.getElementById('privacyModal').style.display = 'none';
-    }
-
-    function openPrivacyModal() {
-      document.getElementById('privacyModal').style.display = 'grid';
-    }
+    // Privacy modal removed — ads preserved. Call and signaling handlers follow below.
 
     const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const wsUrl = `${wsScheme}://${window.location.host}/ws`;
@@ -347,6 +299,12 @@
     let mediaRecorder, voiceChunks = [];
     let allMessages = [];
     let knownUsers = new Set();
+    
+    // WebRTC / call state
+    let localStream = null;
+    let pc = null;
+    let isInCall = false;
+    const pcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
     
     const ABUSIVE_WORDS = ['fuck','fucking','shit','bitch','asshole','chutiya','chootiya','chut','madarchod','maderchod','mc','bhenchod','benchod','bc','gandu','gaand','harami','lund','lauda','loda','randi','saale','saala','kamine','bhosdike'];
     const BAN_KEY = 'wechatBanUntil';
@@ -468,18 +426,32 @@
 
       websocket.onmessage = (event) => {
         try {
-          const p = JSON.parse(event.data);
-          if (p.type === 'history') {
-             allMessages = p.messages;
-             allMessages.forEach(m => addKnownUser(m.username));
-             reRenderChat();
-          } else if (p.type === 'message') {
-             allMessages.push(p); addKnownUser(p.username);
-             if (shouldShowMessage(p)) appendMessageDOM(p, p.username === currentUser);
-          } else if (p.type === 'delete') {
-             document.querySelector(`.message-row[data-message-id="${p.id}"]`)?.remove();
-             allMessages = allMessages.filter(m => m.id !== p.id);
-          }
+         const p = JSON.parse(event.data);
+         // Chat history and messages
+         if (p.type === 'history') {
+           allMessages = p.messages;
+           allMessages.forEach(m => addKnownUser(m.username));
+           reRenderChat();
+         } else if (p.type === 'message') {
+           allMessages.push(p); addKnownUser(p.username);
+           if (shouldShowMessage(p)) appendMessageDOM(p, p.username === currentUser);
+         } else if (p.type === 'delete') {
+           document.querySelector(`.message-row[data-message-id="${p.id}"]`)?.remove();
+           allMessages = allMessages.filter(m => m.id !== p.id);
+
+         // WebRTC signaling handlers
+         } else if (p.type === 'webrtc_offer') {
+           // incoming offer
+           if (!p.to || p.to === currentUser) handleIncomingOffer(p);
+         } else if (p.type === 'webrtc_answer') {
+           if (p.to === currentUser) handleIncomingAnswer(p);
+         } else if (p.type === 'webrtc_ice') {
+           if (p.to === currentUser && pc) {
+            try { pc.addIceCandidate(new RTCIceCandidate(p.candidate)); } catch (e) {}
+           }
+         } else if (p.type === 'call_end') {
+           if (!p.to || p.to === currentUser) endCall(true);
+         }
         } catch (e) {}
       };
       
@@ -532,6 +504,90 @@
     voiceButton.onpointerup = () => {
       if (mediaRecorder?.state === 'recording') { mediaRecorder.stop(); voiceButton.classList.remove('recording'); }
     };
+
+    // Call UI elements
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const callModal = document.getElementById('callModal');
+    const callTitle = document.getElementById('callTitle');
+    const callStatus = document.getElementById('callStatus');
+    const endCallBtn = document.getElementById('endCallBtn');
+    const videoCallButton = document.getElementById('videoCallButton');
+    const audioCallButton = document.getElementById('audioCallButton');
+
+    function showCallUI(kind, peer) {
+      callTitle.textContent = `${kind === 'video' ? 'Video' : 'Voice'} Call`;
+      callStatus.textContent = `In call with ${peer || 'Group'}`;
+      callModal.style.display = 'grid';
+    }
+
+    function hideCallUI() {
+      callModal.style.display = 'none';
+      callStatus.textContent = 'Idle';
+      localVideo.srcObject = null; remoteVideo.srcObject = null;
+    }
+
+    async function createPeerConnection(target) {
+      pc = new RTCPeerConnection(pcConfig);
+      pc.onicecandidate = (e) => { if (e.candidate && websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'webrtc_ice', from: currentUser, to: target || null, candidate: e.candidate })); };
+      pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
+      if (localStream) {
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+      }
+      return pc;
+    }
+
+    async function startCall(kind) {
+      if (!currentUser) { alert('Join chat first'); return; }
+      if (isInCall) { alert('Already in a call'); return; }
+      const recipient = recipientSelect.value || null; // null means group
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia(kind === 'video' ? { audio: true, video: true } : { audio: true });
+        localVideo.srcObject = localStream;
+        const pcLocal = await createPeerConnection(recipient);
+        isInCall = true; showCallUI(kind, recipient || 'Group');
+
+        const offer = await pcLocal.createOffer();
+        await pcLocal.setLocalDescription(offer);
+        if (websocket?.readyState === WebSocket.OPEN) {
+          websocket.send(JSON.stringify({ type: 'webrtc_offer', from: currentUser, to: recipient, sdp: offer.sdp, kind }));
+        }
+      } catch (err) { console.error(err); alert('Unable to start call (permissions or device issue).'); }
+    }
+
+    async function handleIncomingOffer(p) {
+      const from = p.from;
+      const kind = p.kind || 'audio';
+      // Ask user to accept
+      const accept = confirm(`${from} is calling (${kind}). Accept?`);
+      if (!accept) { if (websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'call_end', from: currentUser, to: from })); return; }
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia(kind === 'video' ? { audio: true, video: true } : { audio: true });
+        localVideo.srcObject = localStream;
+        const pcLocal = await createPeerConnection(from);
+        await pcLocal.setRemoteDescription({ type: 'offer', sdp: p.sdp });
+        const answer = await pcLocal.createAnswer();
+        await pcLocal.setLocalDescription(answer);
+        if (websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'webrtc_answer', from: currentUser, to: from, sdp: answer.sdp }));
+        isInCall = true; showCallUI(kind, from);
+      } catch (err) { console.error(err); }
+    }
+
+    async function handleIncomingAnswer(p) {
+      if (!pc) return;
+      try { await pc.setRemoteDescription({ type: 'answer', sdp: p.sdp }); } catch (e) { console.error(e); }
+    }
+
+    function endCall(remote=false) {
+      try { if (pc) { pc.close(); pc = null; } } catch (e) {}
+      try { if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; } } catch (e) {}
+      isInCall = false; hideCallUI();
+      if (!remote && websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'call_end', from: currentUser, to: recipientSelect.value || null }));
+    }
+
+    videoCallButton.onclick = () => startCall('video');
+    audioCallButton.onclick = () => startCall('audio');
+    endCallBtn.onclick = () => endCall(false);
 
     loginButton.onclick = () => {
       if (!displayNameInput.value.trim()) return;
