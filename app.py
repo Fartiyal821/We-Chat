@@ -156,7 +156,12 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "type": "delete",
                                 "id": msg_id
                             })
-
+                
+                # Forward any other payloads (signaling / call events) to connected clients
+                else:
+                    # For real-time features like WebRTC signaling, simply broadcast the payload
+                    # Clients are expected to filter by username/target as needed.
+                    await manager.broadcast(payload)
             except json.JSONDecodeError:
                 continue
             except SQLAlchemyError:
