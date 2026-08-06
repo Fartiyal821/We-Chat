@@ -212,6 +212,8 @@
     </div>
     <div class="chat-tips">
       <div id="statusText" style="color: var(--success); font-weight:bold;">Connecting...</div>
+      <div id="onlineCount" style="color:var(--text-muted);font-size:0.9rem;">0 online</div>
+      <div id="typingIndicator" style="color:var(--text-muted);font-size:0.85rem;height:18px"></div>
     </div>
   </header>
 
@@ -350,6 +352,41 @@
 
     recipientSelect.addEventListener('change', reRenderChat);
 
+    // Typing indicator handling
+    const typingIndicatorEl = document.getElementById('typingIndicator');
+    const typingState = {};
+    let localTyping = false;
+    let typingTimeout = null;
+
+    function sendTypingState(state) {
+      if (websocket?.readyState === WebSocket.OPEN && currentUser) websocket.send(JSON.stringify({ type: 'typing', username: currentUser, state }));
+    }
+
+    function handleTypingIndicator(username, state) {
+      if (!username || username === currentUser) return;
+      if (state === 'start') {
+        typingState[username] = Date.now();
+      } else {
+        delete typingState[username];
+      }
+      renderTyping();
+      // clear after 3s
+      setTimeout(() => { delete typingState[username]; renderTyping(); }, 3000);
+    }
+
+    function renderTyping() {
+      const users = Object.keys(typingState);
+      if (users.length === 0) typingIndicatorEl.textContent = '';
+      else if (users.length === 1) typingIndicatorEl.textContent = `${users[0]} is typing...`;
+      else typingIndicatorEl.textContent = `${users.slice(0,2).join(', ')} are typing...`;
+    }
+
+    messageInput.addEventListener('input', () => {
+      if (!localTyping) { localTyping = true; sendTypingState('start'); }
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => { localTyping = false; sendTypingState('stop'); }, 2000);
+    });
+
     function appendMessageDOM({ username, content, timestamp, id }, isMine) {
       const row = document.createElement('div');
       row.className = `message-row ${isMine ? 'mine' : ''}`;
@@ -421,8 +458,12 @@
 
     async function connectSocket() {
       websocket = new WebSocket(wsUrl);
-      statusText.textContent = 'Connected';
-      statusText.style.color = 'var(--success)';
+      websocket.onopen = () => {
+        statusText.textContent = 'Connected';
+        statusText.style.color = 'var(--success)';
+        // announce presence
+        if (currentUser && websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'join', username: currentUser }));
+      };
 
       websocket.onmessage = (event) => {
         try {
@@ -435,6 +476,22 @@
          } else if (p.type === 'message') {
            allMessages.push(p); addKnownUser(p.username);
            if (shouldShowMessage(p)) appendMessageDOM(p, p.username === currentUser);
+         } else if (p.type === 'presence') {
+            // presence update: { type: 'presence', users: [...] }
+            try { 
+              const users = Array.isArray(p.users) ? p.users : [];
+              // update recipient list with known users
+              users.forEach(u => addKnownUser(u));
+              const onlineCount = users.length;
+              document.getElementById('onlineCount').textContent = `${onlineCount} online`;
+            } catch (e) {}
+         } else if (p.type === 'typing') {
+            // show typing indicator briefly
+            try {
+              const who = p.username;
+              const state = p.state || 'start';
+              handleTypingIndicator(who, state);
+            } catch (e) {}
          } else if (p.type === 'delete') {
            document.querySelector(`.message-row[data-message-id="${p.id}"]`)?.remove();
            allMessages = allMessages.filter(m => m.id !== p.id);
@@ -530,7 +587,14 @@
     async function createPeerConnection(target) {
       pc = new RTCPeerConnection(pcConfig);
       pc.onicecandidate = (e) => { if (e.candidate && websocket?.readyState === WebSocket.OPEN) websocket.send(JSON.stringify({ type: 'webrtc_ice', from: currentUser, to: target || null, candidate: e.candidate })); };
-      pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
+      pc.ontrack = (e) => {
+        try {
+          const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+          remoteVideo.srcObject = stream;
+          // attempt to play (some browsers block autoplay until user interacts)
+          remoteVideo.play().catch(()=>{});
+        } catch (err) { console.error('ontrack attach error', err); }
+      };
       if (localStream) {
         localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
       }
