@@ -42,25 +42,33 @@ Base.metadata.create_all(bind=engine)
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        # map websocket -> username (username may be None until client sends join)
+        self.active_connections: dict[WebSocket, str | None] = {}
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections[websocket] = None
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+            del self.active_connections[websocket]
 
     async def broadcast(self, message: dict):
         disconnected = []
-        for connection in list(self.active_connections):
+        for connection in list(self.active_connections.keys()):
             try:
                 await connection.send_text(json.dumps(message))
             except Exception:
                 disconnected.append(connection)
         for connection in disconnected:
             self.disconnect(connection)
+
+    def set_username(self, websocket: WebSocket, username: str | None):
+        if websocket in self.active_connections:
+            self.active_connections[websocket] = username
+
+    def get_user_list(self) -> list[str]:
+        return sorted([u for u in set(self.active_connections.values() or []) if u])
 
 
 manager = ConnectionManager()
@@ -137,6 +145,18 @@ async def websocket_endpoint(websocket: WebSocket):
                     }
                     await manager.broadcast(message_data)
 
+                # Handle join (presence)
+                elif msg_type == "join":
+                    username = (payload.get("username") or "").strip() or None
+                    manager.set_username(websocket, username)
+                    # broadcast updated presence list
+                    await manager.broadcast({"type": "presence", "users": manager.get_user_list()})
+
+                # Typing indicator (forward to clients)
+                elif msg_type == "typing":
+                    # payload should include 'username' and optional 'to' and 'state' (start/stop)
+                    await manager.broadcast(payload)
+
                 # Handle Message Deletions
                 elif msg_type == "delete":
                     msg_id = payload.get("id")
@@ -169,7 +189,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        # broadcast updated presence
+        try:
+            await manager.broadcast({"type": "presence", "users": manager.get_user_list()})
+        except Exception:
+            pass
     except Exception:
         manager.disconnect(websocket)
+        try:
+            await manager.broadcast({"type": "presence", "users": manager.get_user_list()})
+        except Exception:
+            pass
     finally:
         session.close()
