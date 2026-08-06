@@ -11,7 +11,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine
+from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -135,6 +135,24 @@ def save_message(session, username: str, content: str) -> ChatMessage:
 async def root():
     """Serve the main HTML page."""
     return FileResponse(BASE_DIR / "static" / "index.html")
+
+
+@app.get("/stats")
+async def stats():
+    """Return server statistics for debugging and monitoring."""
+    session = SessionLocal()
+    try:
+        message_count = session.query(func.count(ChatMessage.id)).scalar() or 0
+        online_users = manager.get_user_list()
+        return {
+            "status": "ok",
+            "server_time": datetime.utcnow().isoformat() + "Z",
+            "online_count": len(online_users),
+            "online_users": online_users,
+            "total_messages": message_count,
+        }
+    finally:
+        session.close()
 
 
 # ==================== WEBSOCKET ENDPOINT ====================
